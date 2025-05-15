@@ -19,7 +19,7 @@ export const app = express();
 app.use(helmet());
 
 // CORS global para API
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: 'https://painel.poppys.pt' }));
 
 app.use(json());
 
@@ -35,7 +35,7 @@ app.use("/v1/notification", notificationRouter);
 
 // CORS para arquivos estáticos
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  res.header('Access-Control-Allow-Origin', 'https://painel.poppys.pt');
   res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
