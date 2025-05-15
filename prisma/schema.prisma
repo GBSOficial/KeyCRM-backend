@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int        @id @default(autoincrement())
+  name     String
+  email    String
+  password String
+  offices  String
+  img      String?   // URL/caminho da imagem de perfil
+  leads    Lead[]     // Relacionamento com leads
+  apiTokens ApiToken[]
+  notifications Notification[] // Relacionamento com notificações
+}
+model ApiToken {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  name       String
+  token      String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Lead {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String
+  company     String?
+  status      String    // LEAD, OPPORTUNITY, CUSTOMER
+  source      String?   // Origem do lead
+  notes       String?
+  value       Float?    // Valor do lead
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      Int       // Relacionamento com o usuário responsável
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Board {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  lists     List[]
+}
+
+model List {
+  id        Int      @id @default(autoincrement())
+  name      String
+  order     Int
+  boardId   Int
+  board     Board    @relation(fields: [boardId], references: [id])
+  cards     Card[]
+}
+
+model Card {
+  id        Int      @id @default(autoincrement())
+  title     String
+  description String?
+  order     Int
+  listId    Int
+  list      List     @relation(fields: [listId], references: [id])
+  // outros campos específicos podem ser adicionados depois
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+}
