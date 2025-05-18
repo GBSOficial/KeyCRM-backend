@@ -19,7 +19,10 @@ export const app = express();
 app.use(helmet());
 
 // CORS global para API
-app.use(cors());
+app.use(cors({
+  origin: ['https://painel.poppys.pt', 'http://localhost:3000', 'http://localhost:5173'],
+  credentials: true
+}));
 
 app.use(json());
 
@@ -35,9 +38,16 @@ app.use("/v1/notification", notificationRouter);
 
 // CORS para arquivos estáticos
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://painel.poppys.pt');
+  const allowedOrigins = ['https://painel.poppys.pt', 'http://localhost:3000', 'http://localhost:5173'];
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
