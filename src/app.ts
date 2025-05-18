@@ -19,7 +19,7 @@ export const app = express();
 app.use(helmet());
 
 // CORS global para API
-app.use(cors({ origin: 'https://painel.poppys.pt' }));
+app.use(cors());
 
 app.use(json());
 
