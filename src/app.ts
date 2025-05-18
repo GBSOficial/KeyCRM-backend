@@ -13,6 +13,17 @@ import { listRouter } from "./routes/list.routes";
 import { cardRouter } from "./routes/card.routes";
 import { notificationRouter } from "./routes/notification.routes";
 import path from "path";
+import fs from 'fs';
+
+// Definindo o caminho do diretório de uploads
+const uploadDir = process.env.NODE_ENV === 'production'
+  ? path.join(process.cwd(), 'uploads')
+  : path.join(__dirname, '../uploads');
+
+// Criando o diretório se não existir
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 export const app = express();
 
@@ -51,7 +62,9 @@ app.use('/uploads', (req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// Atualizando o caminho dos arquivos estáticos
+app.use("/uploads", express.static(uploadDir));
 
 app.use(HandleErrors.execute);
 
