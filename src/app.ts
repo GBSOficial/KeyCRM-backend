@@ -14,10 +14,7 @@ import { cardRouter } from "./routes/card.routes";
 import { notificationRouter } from "./routes/notification.routes";
 import path from "path";
 import fs from 'fs';
-<<<<<<< HEAD
 import { AuthenticatedRequest } from "./types/express";
-=======
->>>>>>> b409c860e42bae57d9d53225f111a38f82ead9c5
 
 // Definindo o caminho do diretório de uploads
 const uploadDir = process.env.NODE_ENV === 'production'
@@ -28,15 +25,6 @@ const uploadDir = process.env.NODE_ENV === 'production'
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-<<<<<<< HEAD
-
-// Criando o diretório temporário para uploads
-const tempDir = path.join(uploadDir, 'temp');
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
-}
-=======
->>>>>>> b409c860e42bae57d9d53225f111a38f82ead9c5
 
 export const app = express();
 
@@ -44,11 +32,7 @@ app.use(helmet());
 
 // CORS global para API
 app.use(cors({
-<<<<<<< HEAD
-  origin: ['https://painel.poppys.pt', 'http://localhost:3000', 'http://localhost:5173'],
-=======
-  origin: ['https://painel.poppys.pt'],
->>>>>>> b409c860e42bae57d9d53225f111a38f82ead9c5
+  origin: ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true
 }));
 
@@ -66,29 +50,16 @@ app.use("/v1/notification", notificationRouter);
 
 // CORS para arquivos estáticos
 app.use('/uploads', (req, res, next) => {
-<<<<<<< HEAD
-  const allowedOrigins = ['https://painel.poppys.pt', 'http://localhost:3000', 'http://localhost:5173'];
-=======
-  const allowedOrigins = ['https://painel.poppys.pt'];
->>>>>>> b409c860e42bae57d9d53225f111a38f82ead9c5
+  const allowedOrigins = ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173'];
   const origin = req.headers.origin;
   
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
-  
-  res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
-<<<<<<< HEAD
-=======
-
-// Atualizando o caminho dos arquivos estáticos
-app.use("/uploads", express.static(uploadDir));
->>>>>>> b409c860e42bae57d9d53225f111a38f82ead9c5
 
 // Atualizando o caminho dos arquivos estáticos
 app.use("/uploads", express.static(uploadDir));
