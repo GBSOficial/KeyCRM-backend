@@ -32,7 +32,7 @@ app.use(helmet());
 
 // CORS global para API
 app.use(cors({
-  origin: ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:63541'],
   credentials: true
 }));
 
@@ -50,7 +50,7 @@ app.use("/v1/notification", notificationRouter);
 
 // CORS para arquivos estáticos
 app.use('/uploads', (req, res, next) => {
-  const allowedOrigins = ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173'];
+  const allowedOrigins = ['https://painel.poppys.pt','https://arc.atnzo.app', 'http://localhost:3000', 'http://localhost:5173','http://localhost:63541'];
   const origin = req.headers.origin;
   
   if (origin && allowedOrigins.includes(origin)) {
