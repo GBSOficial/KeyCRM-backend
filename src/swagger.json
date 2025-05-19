@@ -37,7 +37,8 @@
                                         "name": "Gabriel",
                                         "email": "biel@email.com",
                                         "password": "123456789",
-                                        "offices": "Diretor"
+                                        "offices": "Diretor",
+                                        "img": null
                                     }
                                 }
                             }
@@ -253,18 +254,61 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "name": { "type": "string" },
-                                    "email": { "type": "string" },
-                                    "phone": { "type": "string" },
-                                    "company": { "type": "string" },
-                                    "status": { "type": "string" },
-                                    "source": { "type": "string" },
-                                    "notes": { "type": "string" }
+                                    "name": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "description": "Nome do lead"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Email do lead"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "minLength": 10,
+                                        "description": "Telefone do lead"
+                                    },
+                                    "company": {
+                                        "type": "string",
+                                        "description": "Empresa do lead"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "NOVOS_LEADS",
+                                            "CONTATO_INICIAL",
+                                            "QUALIFICACAO",
+                                            "EM_PROPOSTA",
+                                            "FASE_FINAL",
+                                            "REGISTRO_CONTRATO",
+                                            "MASTER_OFFICE",
+                                            "NEGATIVA",
+                                            "SEM_RETORNO"
+                                        ],
+                                        "description": "Status do lead no funil de vendas"
+                                    },
+                                    "value": {
+                                        "type": "number",
+                                        "description": "Valor potencial do negócio"
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "description": "Origem do lead (ex: Site, Indicação, LinkedIn)"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "description": "Notas ou observações sobre o lead"
+                                    },
+                                    "userId": {
+                                        "type": "integer",
+                                        "description": "ID do usuário responsável pelo lead"
+                                    }
                                 },
                                 "required": ["name", "email", "phone", "status"]
                             },
                             "examples": {
-                                "lead": {
+                                "leadCompleto": {
                                     "value": {
                                         "name": "João da Silva",
                                         "email": "joao.silva@email.com",
@@ -273,7 +317,18 @@
                                         "status": "NOVOS_LEADS",
                                         "value": 10000,
                                         "source": "Indicação",
-                                        "notes": "Lead interessado em CRM"
+                                        "notes": "Lead interessado em CRM",
+                                        "userId": 1
+                                    }
+                                },
+                                "leadSimples": {
+                                    "value": {
+                                        "name": "Maria Santos",
+                                        "email": "maria.santos@email.com",
+                                        "phone": "11988888888",
+                                        "company": "Empresa B",
+                                        "status": "NOVOS_LEADS",
+                                        "source": "LinkedIn"
                                     }
                                 }
                             }
@@ -282,7 +337,20 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Lead criado com sucesso"
+                        "description": "Lead criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportLead"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Dados inválidos"
+                    },
+                    "401": {
+                        "description": "Não autorizado"
                     }
                 }
             },
@@ -393,6 +461,385 @@
                 "responses": {
                     "204": {
                         "description": "Lead removido com sucesso"
+                    }
+                }
+            }
+        },
+        "/lead/import/simulate": {
+            "post": {
+                "tags": ["Leads"],
+                "summary": "Simular importação de leads",
+                "description": "Simula a importação de leads para validar os dados antes da importação real",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeadImportRequest"
+                            },
+                            "examples": {
+                                "importacaoSimples": {
+                                    "value": {
+                                        "leads": [
+                                            {
+                                                "name": "João da Silva",
+                                                "email": "joao.silva@email.com",
+                                                "phone": "11999999999",
+                                                "company": "Empresa Exemplo",
+                                                "status": "NOVOS_LEADS",
+                                                "value": 10000,
+                                                "source": "Indicação",
+                                                "notes": "Lead interessado em CRM",
+                                                "userId": 1
+                                            },
+                                            {
+                                                "name": "Maria Santos",
+                                                "email": "maria.santos@email.com",
+                                                "phone": "11988888888",
+                                                "company": "Empresa B",
+                                                "status": "NOVOS_LEADS",
+                                                "source": "LinkedIn",
+                                                "notes": "Solicitou demonstração",
+                                                "userId": 1
+                                            }
+                                        ]
+                                    }
+                                },
+                                "importacaoComErros": {
+                                    "value": {
+                                        "leads": [
+                                            {
+                                                "name": "Jo",
+                                                "email": "email_invalido",
+                                                "phone": "123",
+                                                "company": "Empresa C",
+                                                "status": "STATUS_INVALIDO"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Simulação realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeadImportSimulationResponse"
+                                },
+                                "examples": {
+                                    "sucessoSimulacao": {
+                                        "value": {
+                                            "valid": [
+                                                {
+                                                    "name": "João da Silva",
+                                                    "email": "joao.silva@email.com",
+                                                    "phone": "11999999999",
+                                                    "company": "Empresa Exemplo",
+                                                    "status": "NOVOS_LEADS",
+                                                    "value": 10000,
+                                                    "source": "Indicação",
+                                                    "notes": "Lead interessado em CRM",
+                                                    "userId": 1
+                                                }
+                                            ],
+                                            "invalid": [],
+                                            "summary": {
+                                                "total": 1,
+                                                "valid": 1,
+                                                "invalid": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/lead/import": {
+            "post": {
+                "tags": ["Leads"],
+                "summary": "Importar leads",
+                "description": "Realiza a importação de leads para o sistema",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeadImportRequest"
+                            },
+                            "examples": {
+                                "importacaoSimples": {
+                                    "value": {
+                                        "leads": [
+                                            {
+                                                "name": "João da Silva",
+                                                "email": "joao.silva@email.com",
+                                                "phone": "11999999999",
+                                                "company": "Empresa Exemplo",
+                                                "status": "NOVOS_LEADS",
+                                                "value": 10000,
+                                                "source": "Indicação",
+                                                "notes": "Lead interessado em CRM",
+                                                "userId": 1
+                                            },
+                                            {
+                                                "name": "Maria Santos",
+                                                "email": "maria.santos@email.com",
+                                                "phone": "11988888888",
+                                                "company": "Empresa B",
+                                                "status": "NOVOS_LEADS",
+                                                "source": "LinkedIn",
+                                                "notes": "Solicitou demonstração",
+                                                "userId": 1
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Importação realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "imported": {
+                                            "type": "number",
+                                            "description": "Número de leads importados com sucesso"
+                                        },
+                                        "failed": {
+                                            "type": "number",
+                                            "description": "Número de leads que falharam na importação"
+                                        },
+                                        "total": {
+                                            "type": "number",
+                                            "description": "Número total de leads processados"
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "sucessoImportacao": {
+                                        "value": {
+                                            "imported": 2,
+                                            "failed": 0,
+                                            "total": 2
+                                        }
+                                    },
+                                    "importacaoParcial": {
+                                        "value": {
+                                            "imported": 1,
+                                            "failed": 1,
+                                            "total": 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/lead/import/file/simulate": {
+            "post": {
+                "tags": ["Leads"],
+                "summary": "Simular importação de leads via arquivo",
+                "description": "Simula a importação de leads a partir de um arquivo (CSV, Excel ou JSON)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Arquivo CSV, Excel ou JSON com os leads"
+                                    },
+                                    "fallback": {
+                                        "$ref": "#/components/schemas/ImportFallback"
+                                    }
+                                },
+                                "required": ["file"]
+                            },
+                            "examples": {
+                                "csvExample": {
+                                    "summary": "Exemplo de conteúdo CSV",
+                                    "value": "name,email,phone,company\nJoão da Silva,joao@email.com,11999999999,Empresa A\nMaria Santos,maria@email.com,11988888888,Empresa B"
+                                },
+                                "jsonExample": {
+                                    "summary": "Exemplo de conteúdo JSON",
+                                    "value": [
+                                        {
+                                            "name": "João da Silva",
+                                            "email": "joao@email.com",
+                                            "phone": "11999999999",
+                                            "company": "Empresa A"
+                                        },
+                                        {
+                                            "name": "Maria Santos",
+                                            "email": "maria@email.com",
+                                            "phone": "11988888888",
+                                            "company": "Empresa B"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Simulação realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeadImportSimulationResponse"
+                                },
+                                "examples": {
+                                    "sucessoSimulacao": {
+                                        "value": {
+                                            "valid": [
+                                                {
+                                                    "name": "João da Silva",
+                                                    "email": "joao@email.com",
+                                                    "phone": "11999999999",
+                                                    "company": "Empresa A",
+                                                    "status": "NOVOS_LEADS",
+                                                    "source": "IMPORTACAO"
+                                                },
+                                                {
+                                                    "name": "Maria Santos",
+                                                    "email": "maria@email.com",
+                                                    "phone": "11988888888",
+                                                    "company": "Empresa B",
+                                                    "status": "NOVOS_LEADS",
+                                                    "source": "IMPORTACAO"
+                                                }
+                                            ],
+                                            "invalid": [],
+                                            "summary": {
+                                                "total": 2,
+                                                "valid": 2,
+                                                "invalid": 0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/lead/import/file": {
+            "post": {
+                "tags": ["Leads"],
+                "summary": "Importar leads via arquivo",
+                "description": "Realiza a importação de leads a partir de um arquivo (CSV, Excel ou JSON)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Arquivo CSV, Excel ou JSON com os leads"
+                                    },
+                                    "fallback": {
+                                        "$ref": "#/components/schemas/ImportFallback"
+                                    }
+                                },
+                                "required": ["file"]
+                            },
+                            "examples": {
+                                "csvExample": {
+                                    "summary": "Exemplo de conteúdo CSV",
+                                    "value": "name,email,phone,company\nJoão da Silva,joao@email.com,11999999999,Empresa A\nMaria Santos,maria@email.com,11988888888,Empresa B"
+                                },
+                                "jsonExample": {
+                                    "summary": "Exemplo de conteúdo JSON",
+                                    "value": [
+                                        {
+                                            "name": "João da Silva",
+                                            "email": "joao@email.com",
+                                            "phone": "11999999999",
+                                            "company": "Empresa A"
+                                        },
+                                        {
+                                            "name": "Maria Santos",
+                                            "email": "maria@email.com",
+                                            "phone": "11988888888",
+                                            "company": "Empresa B"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Importação realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "imported": {
+                                            "type": "number",
+                                            "description": "Número de leads importados com sucesso"
+                                        },
+                                        "failed": {
+                                            "type": "number",
+                                            "description": "Número de leads que falharam na importação"
+                                        },
+                                        "total": {
+                                            "type": "number",
+                                            "description": "Número total de leads processados"
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "sucessoImportacao": {
+                                        "value": {
+                                            "imported": 2,
+                                            "failed": 0,
+                                            "total": 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -961,7 +1408,7 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "string"
+                        "type": "integer"
                     },
                     "name": {
                         "type": "string"
@@ -970,23 +1417,32 @@
                         "type": "string"
                     },
                     "password": {
+                        "type": "string",
+                        "minLength": 4
+                    },
+                    "offices": {
                         "type": "string"
+                    },
+                    "img": {
+                        "type": "string",
+                        "nullable": true
                     }
-                }
+                },
+                "required": ["name", "email", "password", "offices"]
             },
             "Login": {
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "type": "string"
-                    },
                     "email": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "email"
                     },
                     "password": {
-                        "type": "string"
+                        "type": "string",
+                        "minLength": 4
                     }
-                }
+                },
+                "required": ["email", "password"]
             },
             "ApiToken": {
                 "type": "object",
@@ -1108,6 +1564,168 @@
                     "userId": { "type": "integer" }
                 },
                 "required": ["title", "message", "userId"]
+            },
+            "LeadImportRequest": {
+                "type": "object",
+                "properties": {
+                    "leads": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImportLead"
+                        }
+                    },
+                    "fallback": {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "type": "string",
+                                "enum": [
+                                    "NOVOS_LEADS",
+                                    "CONTATO_INICIAL",
+                                    "QUALIFICACAO",
+                                    "EM_PROPOSTA",
+                                    "FASE_FINAL",
+                                    "REGISTRO_CONTRATO",
+                                    "MASTER_OFFICE",
+                                    "NEGATIVA",
+                                    "SEM_RETORNO"
+                                ]
+                            },
+                            "source": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": ["leads"]
+            },
+            "ImportLead": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 3,
+                        "description": "Nome do lead"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "Email do lead"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "minLength": 10,
+                        "description": "Telefone do lead"
+                    },
+                    "company": {
+                        "type": "string",
+                        "description": "Empresa do lead"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "NOVOS_LEADS",
+                            "CONTATO_INICIAL",
+                            "QUALIFICACAO",
+                            "EM_PROPOSTA",
+                            "FASE_FINAL",
+                            "REGISTRO_CONTRATO",
+                            "MASTER_OFFICE",
+                            "NEGATIVA",
+                            "SEM_RETORNO"
+                        ],
+                        "description": "Status do lead no funil de vendas"
+                    },
+                    "value": {
+                        "type": "number",
+                        "description": "Valor potencial do negócio"
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": "Origem do lead (ex: Site, Indicação, LinkedIn)"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Notas ou observações sobre o lead"
+                    },
+                    "userId": {
+                        "type": "integer",
+                        "description": "ID do usuário responsável pelo lead"
+                    }
+                },
+                "required": ["name", "email", "phone", "status"]
+            },
+            "LeadImportSimulationResponse": {
+                "type": "object",
+                "properties": {
+                    "valid": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImportLead"
+                        }
+                    },
+                    "invalid": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object"
+                                },
+                                "errors": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "field": {
+                                                "type": "string"
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "properties": {
+                            "total": {
+                                "type": "number"
+                            },
+                            "valid": {
+                                "type": "number"
+                            },
+                            "invalid": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            },
+            "ImportFallback": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "NOVOS_LEADS",
+                            "CONTATO_INICIAL",
+                            "QUALIFICACAO",
+                            "EM_PROPOSTA",
+                            "FASE_FINAL",
+                            "REGISTRO_CONTRATO",
+                            "MASTER_OFFICE",
+                            "NEGATIVA",
+                            "SEM_RETORNO"
+                        ]
+                    },
+                    "source": {
+                        "type": "string"
+                    }
+                }
             }
         },
         "securitySchemes": {

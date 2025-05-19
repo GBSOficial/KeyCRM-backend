@@ -24,14 +24,47 @@ export class LeadServices {
     return lead;
   }
 
-  async findMany(userId: number) {
-    const leads = await prisma.lead.findMany({
-      where: {
-        userId,
-      },
-    });
+  async findMany(userId: number, userOffices: string, showAllLeads: boolean = false) {
+    // Lista de cargos que podem ver todos os leads
+    const allowedOffices = ['Diretor'];
+    const canSeeAllLeads = allowedOffices.includes(userOffices);
 
-    return leads;
+    let where = {};
+    
+    // Se não for diretor, só pode ver seus próprios leads
+    if (!canSeeAllLeads) {
+      where = { userId };
+    }
+    // Se for diretor e showAllLeads for false, mostra apenas seus leads
+    else if (!showAllLeads) {
+      where = { userId };
+    }
+    // Se for diretor e showAllLeads for true, não aplica filtro de userId
+    
+    try {
+      const leads = await prisma.lead.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              img: true,
+              email: true,
+              offices: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+
+      return leads;
+    } catch (error) {
+      console.error('Erro ao buscar leads:', error);
+      throw error;
+    }
   }
 
   async findOne(id: number, userId: number) {
@@ -49,11 +82,15 @@ export class LeadServices {
     return lead;
   }
 
-  async update(id: number, data: any, userId: number) {
+  async update(id: number, data: any, userId: number, userOffices: string) {
+    const allowedOffices = ['Diretor'];
+    const canUpdateUserId = allowedOffices.includes(userOffices);
+
+    // Se não for diretor, só pode atualizar seus próprios leads
     const lead = await prisma.lead.findFirst({
       where: {
         id,
-        userId,
+        ...(canUpdateUserId ? {} : { userId }),
       },
     });
 
@@ -61,11 +98,18 @@ export class LeadServices {
       throw new AppError(404,"Lead não encontrado");
     }
 
+    // Se não for diretor, remove o userId do objeto data
+    let updateData = { ...data };
+    if (!canUpdateUserId) {
+      const { userId: _, ...rest } = updateData;
+      updateData = rest;
+    }
+
     const updatedLead = await prisma.lead.update({
       where: {
         id,
       },
-      data,
+      data: updateData,
     });
 
     return updatedLead;

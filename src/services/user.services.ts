@@ -37,7 +37,7 @@ export class UserServices {
     if (!compare) {
       throw new AppError(403, "Email and password doesn't match");
     }
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string);
+    const token = jwt.sign({ id: user.id, offices: user.offices }, process.env.JWT_SECRET as string);
 
     return { accessToken: token, user: userReturnSchema.parse(user) };
   }

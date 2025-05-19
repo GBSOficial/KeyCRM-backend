@@ -4,15 +4,18 @@ import { ZodError } from "zod";
 import { JsonWebTokenError } from "jsonwebtoken";
 
 export class HandleErrors {
-  static execute(error: Error, req: Request, res: Response, next: NextFunction) {
-    if (error instanceof AppError) {
-      return res.status(error.statusCode).json({ message: error.message });
-    }else if(error instanceof JsonWebTokenError){
-      return res.status(403).json({ message: error.message});
-    }else if (error instanceof ZodError) {
-      return res.status(422).json(error);
+  static execute = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+    if (err instanceof AppError) {
+      res.status(err.statusCode).json({ message: err.message });
+      return;
+    } else if (err instanceof JsonWebTokenError) {
+      res.status(403).json({ message: err.message });
+      return;
+    } else if (err instanceof ZodError) {
+      res.status(422).json(err);
+      return;
     }
-    console.log(error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
   }
 }

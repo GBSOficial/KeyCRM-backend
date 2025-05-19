@@ -6,7 +6,7 @@ export const userSchema = z.object({
     email: z.string().email('Email inválido').min(1),
     password: z.string().min(4, 'Senha deve ter pelo menos 4 caracteres'),
     offices: z.string(),
-    img: z.string().optional()
+    img: z.string().nullable().optional()
 })
 
 export type TUser = z.infer<typeof userSchema>;

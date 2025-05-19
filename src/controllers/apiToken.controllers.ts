@@ -1,8 +1,9 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { ApiTokenServices } from "../services/apiToken.services";
+import { AuthenticatedRequest } from "../types/express";
 
 export class ApiTokenControllers {
-  async create(req: Request, res: Response) {
+  async create(req: AuthenticatedRequest, res: Response) {
     const { userId, name, expiresIn } = req.body;
     const service = new ApiTokenServices();
     try {
@@ -24,7 +25,7 @@ export class ApiTokenControllers {
     }
   }
 
-  async findMany(req: Request, res: Response) {
+  async findMany(req: AuthenticatedRequest, res: Response) {
     const service = new ApiTokenServices();
     const tokens = await service.findMany();
     return res.status(200).json(tokens.map(token => ({
@@ -37,7 +38,7 @@ export class ApiTokenControllers {
     })));
   }
 
-  async findOne(req: Request, res: Response) {
+  async findOne(req: AuthenticatedRequest, res: Response) {
     const service = new ApiTokenServices();
     try {
       const token = await service.findOne(Number(req.params.id));
@@ -54,7 +55,7 @@ export class ApiTokenControllers {
     }
   }
 
-  async update(req: Request, res: Response) {
+  async update(req: AuthenticatedRequest, res: Response) {
     const service = new ApiTokenServices();
     try {
       const token = await service.update(Number(req.params.id), req.body);
@@ -64,7 +65,7 @@ export class ApiTokenControllers {
     }
   }
 
-  async delete(req: Request, res: Response) {
+  async delete(req: AuthenticatedRequest, res: Response) {
     const service = new ApiTokenServices();
     try {
       const result = await service.delete(Number(req.params.id));
